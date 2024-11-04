@@ -9,7 +9,8 @@
         "email": "unclecheese@leftandmain.com"
     }],
     "require": {
-        "silverstripe/framework": "4.*"
+        "php": ">=8.1",
+        "silverstripe/framework": "^5"
     },
     "extra": {
         "installer-name": "dropzone",
@@ -23,5 +24,11 @@
         "psr-4": {
             "UncleCheese\\Dropzone\\": "src/"
         }
-    }    
+    },
+    "config": {
+        "allow-plugins": {
+            "composer/installers": true,
+            "silverstripe/vendor-plugin": true
+        }
+    }
 }
