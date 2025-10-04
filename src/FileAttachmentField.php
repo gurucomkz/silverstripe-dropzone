@@ -330,7 +330,7 @@ class FileAttachmentField extends FileField
      */
     public function getTrackFiles()
     {
-        if (isset($this->settings['trackFiles']) && $this->settings['trackFiles'] !== null) {
+        if (!empty($this->settings['trackFiles'])) {
             return $this->settings['trackFiles'];
         }
         return $this->config()->get('track_files');
@@ -841,11 +841,9 @@ class FileAttachmentField extends FileField
      */
     public function setPermission($perm, $val)
     {
-        return $this->setPermissions(
-            [
+        return $this->setPermissions([
             $perm => $val
-            ]
-        );
+        ]);
     }
 
     /**
@@ -885,7 +883,6 @@ class FileAttachmentField extends FileField
         switch ($code) {
             case UPLOAD_ERR_OK:
                 // no error - 0
-            return "";
             break;
             case UPLOAD_ERR_INI_SIZE:
             case UPLOAD_ERR_FORM_SIZE:
@@ -1004,7 +1001,7 @@ class FileAttachmentField extends FileField
                     if (!$formController instanceof LeftAndMain) {
                         $trackFile->setRecord($formController->getRecord()); // @phpstan-ignore method.notFound
                     }
-                } elseif ($formClass !== 'Form') {
+                } elseif ($formClass !== Form::class) {
                     $trackFile->ControllerClass = $formClass;
                 } else {
                     // If using generic 'Form' instance, get controller
@@ -1320,11 +1317,9 @@ class FileAttachmentField extends FileField
             return $defaultClass;
         }
 
-        if ($record) {
-            $class = $record->getRelationClass($name);
-            if (!$class) {
-                $class = File::class;
-            }
+        $class = $record->getRelationClass($name);
+        if (!$class) {
+            $class = File::class;
         }
 
         if ($filename) {
@@ -1427,7 +1422,7 @@ class FileAttachmentField extends FileField
             throw new Exception("FileAttachmentField::getDefaults() - There is no config json file at $file_path");
         }
 
-        return json_decode(file_get_contents($file_path) ?? '', true);
+        return json_decode(file_get_contents($file_path) ?: '', true);
     }
 
     /**
