@@ -2,6 +2,7 @@
 
 namespace UncleCheese\Dropzone;
 
+use SilverStripe\Admin\LeftAndMain;
 use SilverStripe\Assets\File;
 use SilverStripe\Control\Controller;
 use SilverStripe\ORM\DataObject;
@@ -15,6 +16,7 @@ use SilverStripe\ORM\DataObjectInterface;
  * @property string $RecordClass
  * 
  * @property File $File
+ * @property int $FileID
  * 
  * @package unclecheese/silverstripe-dropzone
  */
@@ -52,20 +54,20 @@ class FileAttachmentFieldTrack extends DataObject
             $controller = Controller::curr();
             if (!$this->RecordID && $controller) {
                 $pageRecord = null;
-                if ($controller->hasMethod('data')) {
+                if (method_exists($controller, 'data')) {
                     // Store page visiting on frontend (ContentController)
                     $pageRecord = $controller->data();
-                } elseif ($controller->hasMethod('currentPageID')) {
+                } elseif ($controller instanceof LeftAndMain) {
                     // Store editing page in CMS (LeftAndMain)
-                    $id = $controller->currentPageID();
+                    $id = $controller->currentRecordID();
                     $pageRecord = $controller->getRecord($id);
                 } elseif ($controller->hasMethod('getRecord')) {
-                    $pageRecord = $controller->getRecord();
+                    $pageRecord = $controller->getRecord(); // @phpstan-ignore method.notFound
                 }
 
                 if ($pageRecord && $pageRecord instanceof DataObjectInterface) {
-                    $this->RecordID = $pageRecord->ID;
-                    $this->RecordClass = $pageRecord->ClassName;
+                    $this->RecordID = $pageRecord->ID; // @phpstan-ignore property.notFound
+                    $this->RecordClass = $pageRecord->ClassName; // @phpstan-ignore property.notFound
                 }
             }
         }

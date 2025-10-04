@@ -2,20 +2,21 @@
 
 namespace UncleCheese\Dropzone;
 
+use SilverStripe\Assets\File;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Image;
+use SilverStripe\Assets\Storage\AssetContainer;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Extension;
 use SilverStripe\Core\Manifest\ModuleResourceLoader;
-use SilverStripe\ORM\DataObject;
 
 /**
  * Adds helper methods to the core {@link File} object
  *
  * @package unclecheese/dropzone
  * @author  Uncle Cheese <unclecheese@leftandmain.com>
- * @extends Extension<DataObject>
+ * @extends Extension<File>
  */
 class DropzoneFile extends Extension
 {
@@ -39,22 +40,22 @@ class DropzoneFile extends Extension
      *
      * @param  int $w The width of the image
      * @param  int $h The height of the image
-     * @return Image_Cached
+     * @return AssetContainer
      */
     public function getPreviewThumbnail($w = null, $h = null)
     {
         if (!$w) {
-            $w = $this->owner->config()->grid_thumbnail_width;
+            $w = $this->owner->config()->get('grid_thumbnail_width');
         }
         if (!$h) {
-            $h = $this->owner->config()->grid_thumbnail_height;
+            $h = $this->owner->config()->get('grid_thumbnail_height');
         }
 
         if ($this->IsImage() && Director::fileExists($this->owner->Filename)) {
-            return $this->owner->CroppedImage($w, $h);
+            return $this->owner->FillMax($w, $h);
         }
 
-        $sizes = Config::forClass(FileAttachmentField::class)->icon_sizes;
+        $sizes = Config::forClass(FileAttachmentField::class)->get('icon_sizes');
         sort($sizes);
 
         foreach ($sizes as $size) {

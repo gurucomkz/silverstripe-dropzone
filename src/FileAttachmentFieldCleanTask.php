@@ -29,7 +29,7 @@ class FileAttachmentFieldCleanTask extends BuildTask
         $files = $files->toArray();
         if ($files) {
             foreach ($files as $trackRecord) {
-                $file = $trackRecord->File();
+                $file = $trackRecord->File;
                 if ($file->exists()) {
                     $output->writeln('Remove File #' . $file->ID . ' from "' . $trackRecord->ControllerClass . '" on ' . $trackRecord->RecordClass . ' #' . $trackRecord->RecordID);
                     $file->delete();

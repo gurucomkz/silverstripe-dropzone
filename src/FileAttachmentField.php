@@ -21,11 +21,13 @@ use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Admin\LeftAndMain;
 use SilverStripe\Core\Convert;
 use SilverStripe\Core\Validation\ValidationResult;
+use SilverStripe\Forms\Form;
 use SilverStripe\ORM\ManyManyList;
 use SilverStripe\Model\List\SS_List;
 use SilverStripe\Model\List\ArrayList;
 use SilverStripe\ORM\RelationList;
 use SilverStripe\ORM\UnsavedRelationList;
+use SilverStripe\View\SSViewer;
 
 /**
  * Defines the FileAttachementField form field type
@@ -330,7 +332,7 @@ class FileAttachmentField extends FileField
         if (isset($this->settings['trackFiles']) && $this->settings['trackFiles'] !== null) {
             return $this->settings['trackFiles'];
         }
-        return $this->config()->track_files;
+        return $this->config()->get('track_files');
     }
 
     /**
@@ -846,7 +848,7 @@ class FileAttachmentField extends FileField
     }
 
     /**
-     * @param String
+     * @param string $name
      */
     public function setDisplayFolderName($name)
     {
@@ -855,7 +857,7 @@ class FileAttachmentField extends FileField
     }
 
     /**
-     * @return String
+     * @return string
      */
     public function getDisplayFolderName()
     {
@@ -997,15 +999,15 @@ class FileAttachmentField extends FileField
                 if ($controller instanceof LeftAndMain) {
                     // If in CMS (store DataObject or Page)
                     $formController = $form->getController();
-                    $trackFile->ControllerClass = $formController->class;
+                    $trackFile->ControllerClass = get_class($formController);
                     if (!$formController instanceof LeftAndMain) {
-                        $trackFile->setRecord($formController->getRecord());
+                        $trackFile->setRecord($formController->getRecord()); // @phpstan-ignore method.notFound
                     }
                 } elseif ($formClass !== 'Form') {
                     $trackFile->ControllerClass = $formClass;
                 } else {
                     // If using generic 'Form' instance, get controller
-                    $trackFile->ControllerClass = $controller->class;
+                    $trackFile->ControllerClass = get_class($controller);
                 }
                 $trackFile->FileID = $fileObject->ID;
                 $trackFile->write();
@@ -1019,7 +1021,7 @@ class FileAttachmentField extends FileField
 
     /**
      * @param  HTTPRequest $request
-     * @return UploadField_ItemHandler
+     * @return mixed
      */
     public function handleSelect(HTTPRequest $request)
     {
@@ -1256,7 +1258,7 @@ class FileAttachmentField extends FileField
     {
         $w = $this->getSelectedThumbnailWidth();
 
-        foreach ($this->config()->icon_sizes as $size) {
+        foreach ($this->config()->get('icon_sizes') as $size) {
             if ($w <= $size) {
                 return $size;
             }
@@ -1326,7 +1328,7 @@ class FileAttachmentField extends FileField
 
         if ($filename) {
             if ($defaultClass == "Image"
-                && $this->config()->upgrade_images
+                && $this->config()->get('upgrade_images')
                 && !Injector::inst()->get($class) instanceof Image
             ) {
                 $class = Image::class;
@@ -1348,18 +1350,18 @@ class FileAttachmentField extends FileField
             if ($record && $record instanceof DataObject) {
                 $this->record = $record;
             } elseif ($controller = $this->form->getController()) {
-                if ($controller->hasMethod('data')
+                if (method_exists($controller, 'data')
                     && ($record = $controller->data())
                     && ($record instanceof DataObject)
                 ) {
                     $this->record = $record;
                 } elseif ($controller->hasMethod('getRecord')) {
-                    if ($controller->hasMethod('currentPageID')) {
-                        if ($record = $controller->getRecord($controller->currentPageID())) {
+                    if ($controller instanceof LeftAndMain) {
+                        if ($record = $controller->getRecord($controller->currentRecordID())) {
                             $this->record = $record;
                         }
                     } else {
-                        $this->record = $controller->getRecord();
+                        $this->record = $controller->getRecord(); // @phpstan-ignore method.notFound
                     }
                 }
             }
@@ -1418,7 +1420,7 @@ class FileAttachmentField extends FileField
     protected function getDefaults()
     {
         $file_path = ModuleLoader::inst()->getManifest()->getModule('unclecheese/dropzone')
-            ->getResource($this->config()->default_config_path)
+            ->getResource($this->config()->get('default_config_path'))
             ->getPath();
         if (!file_exists($file_path)) {
             throw new Exception("FileAttachmentField::getDefaults() - There is no config json file at $file_path");
@@ -1440,7 +1442,7 @@ class FileAttachmentField extends FileField
 
         $setting = $this->view == "grid" ? 'grid_thumbnail_width' : 'list_thumbnail_width';
 
-        return $this->config()->$setting;
+        return $this->config()->get($setting);
     }
 
     /**
@@ -1456,7 +1458,7 @@ class FileAttachmentField extends FileField
 
         $setting = $this->view == "grid" ? 'grid_thumbnail_height' : 'list_thumbnail_height';
 
-        return $this->config()->$setting;
+        return $this->config()->get($setting);
     }
 
     /**
@@ -1469,7 +1471,7 @@ class FileAttachmentField extends FileField
     {
         $data = $this->settings;
         $defaults = $this->getDefaults();
-        foreach ($this->config()->defaults as $setting => $value) {
+        foreach ($this->config()->get('defaults') as $setting => $value) {
             $js_name = static::camelise($setting);
 
             // If the setting has been set on the instance, use that value
