@@ -9,8 +9,9 @@
         "email": "unclecheese@leftandmain.com"
     }],
     "require": {
-        "php": ">=8.1",
-        "silverstripe/framework": "^5"
+        "php": ">=8.3",
+        "silverstripe/framework": "^6",
+        "silverstripe/admin": "^3.0"
     },
     "extra": {
         "installer-name": "dropzone",
@@ -30,5 +31,8 @@
             "composer/installers": true,
             "silverstripe/vendor-plugin": true
         }
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^2.1"
     }
 }

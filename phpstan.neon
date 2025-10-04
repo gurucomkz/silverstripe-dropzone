@@ -1,0 +1,12 @@
+parameters:
+    treatPhpDocTypesAsCertain: false
+    # ignoreErrors:
+    #     - '#Static property [a-zA-Z0-9\\_]+::\$title is never read, only written\.#'
+    #     - '#Static property [a-zA-Z0-9\\_]+::\$has_one is never read, only written\.#'
+    #     - '#Static property [a-zA-Z0-9\\_]+::\$description is never read, only written\.#'
+    level: 1
+    paths:
+        - src
+        - _config.php
+    scanDirectories:
+        - vendor

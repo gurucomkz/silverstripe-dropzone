@@ -6,16 +6,18 @@ use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Image;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\Config\Config;
+use SilverStripe\Core\Extension;
 use SilverStripe\Core\Manifest\ModuleResourceLoader;
-use SilverStripe\ORM\DataExtension;
+use SilverStripe\ORM\DataObject;
 
 /**
  * Adds helper methods to the core {@link File} object
  *
  * @package unclecheese/dropzone
  * @author  Uncle Cheese <unclecheese@leftandmain.com>
+ * @extends Extension<DataObject>
  */
-class DropzoneFile extends DataExtension
+class DropzoneFile extends Extension
 {
 
 
@@ -72,6 +74,7 @@ class DropzoneFile extends DataExtension
                 return $image;
             }
         }
+        return Image::create();
     }
 
 

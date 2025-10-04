@@ -20,9 +20,10 @@ use SilverStripe\Assets\Image;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Admin\LeftAndMain;
 use SilverStripe\Core\Convert;
+use SilverStripe\Core\Validation\ValidationResult;
 use SilverStripe\ORM\ManyManyList;
-use SilverStripe\ORM\SS_List;
-use SilverStripe\ORM\ArrayList;
+use SilverStripe\Model\List\SS_List;
+use SilverStripe\Model\List\ArrayList;
 use SilverStripe\ORM\RelationList;
 use SilverStripe\ORM\UnsavedRelationList;
 
@@ -203,7 +204,8 @@ class FileAttachmentField extends FileField
         $this->setFieldHolderTemplate(__NAMESPACE__ . '\\FileAttachmentField_holder');
         $this->setSmallFieldHolderTemplate(__NAMESPACE__ . '\\FileAttachmentField_holder_small');
 
-        parent::__construct($name, $title, $value, $form);
+        parent::__construct($name, $title, $value);
+        $this->setForm($form);
     }
 
     /**
@@ -498,11 +500,11 @@ class FileAttachmentField extends FileField
     /**
      * Check that the user is submitting the file IDs that they uploaded.
      *
-     * @return boolean
+     * @return ValidationResult
      */
-    public function validate($validator)
+    public function validate(): ValidationResult
     {
-        $result = true;
+        $result = parent::validate();
 
         // Detect if files have been removed between AJAX uploads and form submission
         $value = $this->dataValue();
@@ -512,13 +514,13 @@ class FileAttachmentField extends FileField
             // (Below validation isn't triggered as setValue() removes the invalid ID
             //  to prevent the CMS from loading something it shouldn't, also stops the
             //  validator from realizing there's an invalid ID.)
-            $validator->validationError(
+            $result->addFieldError(
                 $this->name,
                 _t(
                     'FileAttachmentField.VALIDATION',
                     'Invalid file ID sent.'
                 ),
-                "validation"
+                ValidationResult::TYPE_ERROR
             );
             $result = false;
         } elseif ($value && is_array($value)) {
@@ -528,18 +530,15 @@ class FileAttachmentField extends FileField
 
             foreach ($value as $id) {
                 if (!isset($validIDs[$id])) {
-                    if ($validator) {
-                        $validator->validationError(
-                            $this->name,
-                            _t(
-                                'FileAttachmentField.VALIDATION',
-                                'Invalid file ID sent %s.',
-                                ['id' => $id]
-                            ),
-                            "validation"
-                        );
-                    }
-                    $result = false;
+                    $result->addFieldError(
+                        $this->name,
+                        _t(
+                            'FileAttachmentField.VALIDATION',
+                            'Invalid file ID sent %s.',
+                            ['id' => $id]
+                        ),
+                        ValidationResult::TYPE_ERROR
+                    );
                 }
             }
         }
@@ -968,6 +967,7 @@ class FileAttachmentField extends FileField
 
         $ids =  [];
         foreach ($tmpFiles as $tmpFile) {
+            $fileObject = null;
             if ($tmpFile['error']) {
                 // http://php.net/manual/en/features.file-upload.errors.php
                 $user_message = $this->getUploadUserError($tmpFile['error']);
@@ -990,7 +990,7 @@ class FileAttachmentField extends FileField
             }
 
             if ($this->getTrackFiles()) {
-                $controller = Controller::has_curr() ? Controller::curr() : null;
+                $controller = Controller::curr();
                 $formClass = ($form) ? get_class($form) : '';
 
                 $trackFile = FileAttachmentFieldTrack::create();
@@ -1027,7 +1027,7 @@ class FileAttachmentField extends FileField
             return $this->httpError(403);
         }
 
-        return FileAttachmentField_SelectHandler::create($this, $this->getFolderName());
+        return Injector::inst()->createWithArgs('UncleCheese\\Dropzone\\FileAttachmentField_SelectHandler', [$this, $this->getFolderName()]);
     }
 
 
@@ -1042,6 +1042,7 @@ class FileAttachmentField extends FileField
     {
         if ($this->CanDelete() && $record = $this->getRecord()) {
             $ones = $record->hasOne();
+            $file = null;
 
             if ($relation = $this->getRelation()) {
                 $file = $relation->byID($id);
@@ -1260,6 +1261,7 @@ class FileAttachmentField extends FileField
                 return $size;
             }
         }
+        return 0;
     }
 
     /**

@@ -9,7 +9,13 @@ use SilverStripe\ORM\DataObjectInterface;
 
 /**
  * Track files as they're uploaded and remove when they've been saved.
- *
+ * 
+ * @property string $ControllerClass
+ * @property int $RecordID
+ * @property string $RecordClass
+ * 
+ * @property File $File
+ * 
  * @package unclecheese/silverstripe-dropzone
  */
 class FileAttachmentFieldTrack extends DataObject
@@ -43,8 +49,8 @@ class FileAttachmentFieldTrack extends DataObject
         parent::onBeforeWrite();
         if (!$this->exists()) {
             // Store record this file was tracked on.
-            if (!$this->RecordID && Controller::has_curr()) {
-                $controller = Controller::curr();
+            $controller = Controller::curr();
+            if (!$this->RecordID && $controller) {
                 $pageRecord = null;
                 if ($controller->hasMethod('data')) {
                     // Store page visiting on frontend (ContentController)

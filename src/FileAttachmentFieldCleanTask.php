@@ -4,6 +4,8 @@ namespace UncleCheese\Dropzone;
 
 use SilverStripe\Dev\BuildTask;
 use SilverStripe\ORM\DB;
+use SilverStripe\PolyExecution\PolyOutput;
+use Symfony\Component\Console\Input\InputInterface;
 
 /**
  * Delete all files being tracked that weren't saved against anything.
@@ -17,11 +19,11 @@ class FileAttachmentFieldCleanTask extends BuildTask
 {
     private static $segment = 'dropzone-clean';
 
-    protected $title = "File Attachment Field - Clear all tracked files that are older than 1 hour";
+    protected string $title = "File Attachment Field - Clear all tracked files that are older than 1 hour";
 
-    protected $description = 'Delete files uploaded via FileAttachmentField that aren\'t attached to anything.';
+    protected static string $description = 'Delete files uploaded via FileAttachmentField that aren\'t attached to anything.';
 
-    public function run($request)
+    public function execute(InputInterface $input, PolyOutput $output): int
     {
         $files = FileAttachmentFieldTrack::get()->filter(array('Created:LessThanOrEqual' => date('Y-m-d H:i:s', time()-3600)));
         $files = $files->toArray();
@@ -29,15 +31,16 @@ class FileAttachmentFieldCleanTask extends BuildTask
             foreach ($files as $trackRecord) {
                 $file = $trackRecord->File();
                 if ($file->exists()) {
-                    DB::alteration_message('Remove File #' . $file->ID . ' from "' . $trackRecord->ControllerClass . '" on ' . $trackRecord->RecordClass . ' #' . $trackRecord->RecordID, 'error');
+                    $output->writeln('Remove File #' . $file->ID . ' from "' . $trackRecord->ControllerClass . '" on ' . $trackRecord->RecordClass . ' #' . $trackRecord->RecordID);
                     $file->delete();
                 } else {
-                    DB::alteration_message('Untrack missing File #' . $file->ID . ' from "' . $trackRecord->ControllerClass . '" on ' . $trackRecord->RecordClass . ' #' . $trackRecord->RecordID, 'error');
+                    $output->writeln('Untrack missing File #' . $file->ID . ' from "' . $trackRecord->ControllerClass . '" on ' . $trackRecord->RecordClass . ' #' . $trackRecord->RecordID);
                 }
                 $trackRecord->delete();
             }
         } else {
-            DB::alteration_message('No tracked files to remove.');
+            $output->writeln('No tracked files to remove.');
         }
+        return 0;
     }
 }
