@@ -25,9 +25,9 @@ use SilverStripe\Forms\Form;
 use SilverStripe\ORM\ManyManyList;
 use SilverStripe\Model\List\SS_List;
 use SilverStripe\Model\List\ArrayList;
+use SilverStripe\Model\ModelData;
 use SilverStripe\ORM\RelationList;
 use SilverStripe\ORM\UnsavedRelationList;
-use SilverStripe\View\SSViewer;
 
 /**
  * Defines the FileAttachementField form field type
@@ -179,7 +179,7 @@ class FileAttachmentField extends FileField
             ]
         );
 
-        return floor($bytes/(1024*1024));
+        return (int)floor($bytes/(1024*1024));
     }
 
     /**
@@ -215,7 +215,7 @@ class FileAttachmentField extends FileField
      * Adds the security token
      *
      * @param  array $attributes
-     * @return SSViewer
+     * @return ModelData
      */
     public function FieldHolder($attributes = [])
     {
@@ -228,11 +228,12 @@ class FileAttachmentField extends FileField
      * Adds the security token
      *
      * @param  array $attributes
-     * @return SSViewer
+     * @return ModelData
      */
-    public function SmallFieldHolder($attributes = [])
+    public function SmallFieldHolder($attributes = []) // @phpstan-ignore method.childReturnType
     {
         $this->defineFieldHolderRequirements();
+        /** @var ModelData */
         return parent::SmallFieldHolder($attributes);
     }
 
